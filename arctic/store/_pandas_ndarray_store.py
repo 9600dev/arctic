@@ -4,18 +4,16 @@ import logging
 import numpy as np
 from bson.binary import Binary
 from pandas import DataFrame, Series
-try:
-    from pandas import Panel
-except ImportError:
-    pass
 
 from arctic._util import NP_OBJECT_DTYPE
-from arctic.serialization.numpy_records import SeriesSerializer, DataFrameSerializer
-from ._ndarray_store import NdarrayStore
+from arctic.serialization.numpy_records import (DataFrameSerializer,
+                                                SeriesSerializer)
+
 from .._compression import compress, decompress
 from .._config import FORCE_BYTES_TO_UNICODE
 from ..date._util import to_pandas_closed_closed
 from ..exceptions import ArcticException
+from ._ndarray_store import NdarrayStore
 
 log = logging.getLogger(__name__)
 
@@ -217,7 +215,11 @@ class PandasPanelStore(PandasDataFrameStore):
 
     @staticmethod
     def can_write_type(data):
-        return isinstance(data, Panel)
+        try:
+            from pandas import Panel
+            return isinstance(data, Panel)
+        except ImportError:
+            return False
 
     def can_write(self, version, symbol, data):
         if self.can_write_type(data):
