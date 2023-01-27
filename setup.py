@@ -19,8 +19,7 @@
 import logging
 import sys
 
-from setuptools import find_packages
-from setuptools import setup
+from setuptools import find_packages, setup
 from setuptools.command.test import test as TestCommand
 
 long_description_content_type='text/markdown'
@@ -76,8 +75,8 @@ setup(
                       "enum-compat",
                       "mock",
                       "mockextras",
-                      "pandas<1.1.0",
-                      "numpy<1.19.0",
+                      "pandas>=1.5.3",
+                      "numpy>=1.22.4",
                       "pymongo>=3.6.0, <= 3.11.0",
                       "pytz",
                       "tzlocal",

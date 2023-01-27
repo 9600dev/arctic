@@ -2,36 +2,39 @@ from __future__ import print_function
 
 import copy
 import logging
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt
+from datetime import timedelta
 
 import numpy as np
 import pandas as pd
 import pymongo
 from bson.binary import Binary
+from pandas.core.internals.construction import arrays_to_mgr
 from pymongo import ReadPreference
 from pymongo.errors import OperationFailure
-
-try:
-    from pandas.core.frame import _arrays_to_mgr
-except ImportError:
-    # Deprecated since pandas 0.23.4
-    from pandas.core.internals.construction import arrays_to_mgr as _arrays_to_mgr
 
 try:
     from pandas.api.types import infer_dtype
 except ImportError:
     from pandas.lib import infer_dtype
 
-from ..date import DateRange, to_pandas_closed_closed, mktz, datetime_to_ms, ms_to_datetime, CLOSED_CLOSED, to_dt, utc_dt_to_local_dt
-from ..decorators import mongo_retry
-from ..exceptions import OverlappingDataException, NoDataFoundException, UnorderedDataException, UnhandledDtypeException, ArcticException
 from .._util import indent
+from ..date import (CLOSED_CLOSED, DateRange, datetime_to_ms, mktz,
+                    ms_to_datetime, to_dt, to_pandas_closed_closed,
+                    utc_dt_to_local_dt)
+from ..decorators import mongo_retry
+from ..exceptions import (ArcticException, NoDataFoundException,
+                          OverlappingDataException, UnhandledDtypeException,
+                          UnorderedDataException)
 
 try:
-    from lz4.block import compress as lz4_compress, decompress as lz4_decompress
+    from lz4.block import compress as lz4_compress
+    from lz4.block import decompress as lz4_decompress
     lz4_compressHC = lambda _str: lz4_compress(_str, mode='high_compression')
 except ImportError as e:
-    from lz4 import compress as lz4_compress, compressHC as lz4_compressHC, decompress as lz4_decompress
+    from lz4 import compress as lz4_compress
+    from lz4 import compressHC as lz4_compressHC
+    from lz4 import decompress as lz4_decompress
 
 
 PD_VER = pd.__version__
@@ -352,7 +355,8 @@ class TickStore(object):
 
         t = (dt.now() - perf_start).total_seconds()
         logger.info("Got data in %s secs, creating DataFrame..." % t)
-        mgr = _arrays_to_mgr(arrays, columns, index, columns, dtype=None)
+        # verify_integrity seems to figure out an index
+        mgr = arrays_to_mgr(arrays=arrays, columns=columns, index=index, typ='block', verify_integrity=False)
         rtn = pd.DataFrame(mgr)
         # Present data in the user's default TimeZone
         rtn.index = rtn.index.tz_convert(mktz())
@@ -361,7 +365,7 @@ class TickStore(object):
         ticks = len(rtn)
         rate = int(ticks / t) if t != 0 else float("nan")
         logger.info("%d rows in %s secs: %s ticks/sec" % (ticks, t, rate))
-        if not rtn.index.is_monotonic:
+        if not rtn.index.is_monotonic_increasing:
             logger.error("TimeSeries data is out of order, sorting!")
             rtn = rtn.sort_index(kind='mergesort')
         if date_range:
