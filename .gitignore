@@ -14,5 +14,6 @@ htmlcov
 coverage.xml
 junit.xml
 /tmp/
+.python-version
 
 *.sw[op]

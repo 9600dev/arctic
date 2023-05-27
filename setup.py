@@ -68,7 +68,7 @@ setup(
     long_description='\n'.join((long_description, changelog)),
     long_description_content_type="text/markdown",
     cmdclass={'test': PyTest},
-    setup_requires=["numpy<1.19.0",
+    setup_requires=["numpy>=1.22.4",
                     "setuptools-git",
                    ],
     install_requires=["decorator",
@@ -91,7 +91,7 @@ setup(
                    "pytest-server-fixtures",
                    "pytest-timeout",
                    "pytest-xdist<=1.26.1",
-                   "tomli<2; python_version=='3.6'",
+                   "tomli<2; python_version>='3.9.5'",
                    "lz4"
                   ],
     entry_points={'console_scripts': [
